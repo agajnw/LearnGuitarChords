@@ -46,6 +46,7 @@ public class AudioCapture implements Runnable{
         totalAudioLen = totalReadBytes;
         totalDataLen = totalAudioLen + 36;
         byte finalBuffer[] = new byte[totalReadBytes + 44];
+        Log.d("TOTAL", "Total read bytes " + totalReadBytes);
 
         finalBuffer[0] = 'R'; // RIFF/WAVE header
         finalBuffer[1] = 'I';

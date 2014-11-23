@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.chart.BarChart;
-import org.achartengine.chart.PointStyle;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -52,7 +51,7 @@ public class MainActivity extends ActionBarActivity {
 	{
 		if(fftData != null)
 		{
-			//createInitialDataChart(fftData, true);
+			createInitialDataChart(fftData, true);
 		}
 	}
 	
@@ -117,6 +116,9 @@ public class MainActivity extends ActionBarActivity {
         try {
             in = new FileInputStream(fn);
             try {
+            	Log.d("READ", "Remaining1 " + in.available());
+            	in.skip(44+5*4096);
+            	Log.d("READ", "Remaining2 " + in.available());
                 in.read(bData);
                 in.close();
             } catch (IOException e) {
@@ -138,6 +140,32 @@ public class MainActivity extends ActionBarActivity {
         	dData[i] = (double)sData[i];
         	Log.d("TAG2", "sample " + i + ": " + dData[i]);
         }
+        
+        AudioAnalysis audioAnalysis = new AudioAnalysis(dataLength);
+        fftData = new double[dataLength/2];
+        audioAnalysis.analyseAudio(dData, fftData);
+        
+        findPeak(fftData);
+        
+        for(int i=0;i<dataLength/2;i++)
+        {
+        	//Log.d("TAG", "sample " + i + ": " + dData[i]);
+        	Log.d("TAG", "FFT data " + i + ": " +fftData[i]);
+        }
+	}
+	
+	private void findPeak(double [] data)
+	{
+		double maxValue = 0;
+		int maxI = 0;
+		for(int i=0;i<data.length;i++)
+			if(data[i]>=maxValue)
+			{
+				maxValue = data[i];
+				maxI = i;
+			}
+		Log.d("PEAK", "Peak is at " + maxI + ", value " + maxValue);
+				
 	}
 	
 	private void createInitialDataChart(double[] data, boolean is_fft)
