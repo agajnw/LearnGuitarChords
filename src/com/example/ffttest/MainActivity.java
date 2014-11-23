@@ -1,11 +1,23 @@
 package com.example.ffttest;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import org.achartengine.ChartFactory;
+import org.achartengine.chart.BarChart;
+import org.achartengine.chart.PointStyle;
+import org.achartengine.model.XYMultipleSeriesDataset;
+import org.achartengine.model.XYSeries;
+import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 
 import com.example.ffttest.AudioCapture;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
+import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,6 +37,24 @@ public class MainActivity extends ActionBarActivity {
 	
 	private double[] fftData;
 	private double[] dData;
+	
+	private int dataLength = 2048;
+	
+	public void showInitialChart(View view)
+	{
+		if(dData != null)
+		{
+			createInitialDataChart(dData, false);
+		}
+	}
+	
+	public void showFFTChart(View view)
+	{
+		if(fftData != null)
+		{
+			//createInitialDataChart(fftData, true);
+		}
+	}
 	
 	public void onButtonClicked(View view)
 	{
@@ -67,6 +97,8 @@ public class MainActivity extends ActionBarActivity {
 		
 		Log.d("FFTTEST", "file name " + fn);
 		
+		writeAudioData(fn);
+		
 		MediaPlayer player = new MediaPlayer();
 		try {
 			player.setDataSource(fn);
@@ -75,6 +107,84 @@ public class MainActivity extends ActionBarActivity {
 		} catch(IOException e) {
 			Log.e("FFTTEST", "play prepare() failed");
 		}
+	}
+	
+	public void writeAudioData(String fn) {
+		FileInputStream in;
+		byte[] bData = new byte[dataLength*2];
+		short[] sData = new short[dataLength];
+		
+        try {
+            in = new FileInputStream(fn);
+            try {
+                in.read(bData);
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
+        
+        for (int i = 0; i < dataLength*2; i += 2) {
+            sData[i/2] = (short) ((bData[i]) | bData[i + 1] << 8);
+            Log.d("TAG1", "sample " + i/2 + ": " + sData[i/2]);
+        }
+        
+        dData = new double[dataLength];
+        for(int i=0;i<dataLength;i++)
+        {
+        	dData[i] = (double)sData[i];
+        	Log.d("TAG2", "sample " + i + ": " + dData[i]);
+        }
+	}
+	
+	private void createInitialDataChart(double[] data, boolean is_fft)
+	{
+		Log.d("TAG", "Create initial data chart");
+		XYSeries series = new XYSeries(getString(R.string.initial_data_chart));
+		
+		XYMultipleSeriesDataset mSeries = new XYMultipleSeriesDataset();
+		mSeries.addSeries(series);
+		
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		renderer.setLineWidth(2);
+		renderer.setColor(Color.RED);
+		
+		XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
+		mRenderer.setXLabels(0);
+		mRenderer.setChartTitle(getString(R.string.initial_data_chart));
+		mRenderer.setXTitle("Sample number");
+		mRenderer.setYTitle("Sample PMC");
+		mRenderer.setShowGrid(true);
+		
+		mRenderer.addSeriesRenderer(renderer);
+		
+		Intent intent;
+
+		if(!is_fft)
+		{
+			for(int i=0;i<data.length;i++)
+			{
+				mRenderer.addXTextLabel(i+1, ""+i+1);
+				series.add(i, data[i]);
+				Log.d("TAG3", "sample  " + i + ": " + data[i]);
+			}
+			intent = ChartFactory.getLineChartIntent(getBaseContext(), mSeries, mRenderer);
+		}
+		else
+		{
+			for(int i=0;i<data.length/2;i++)
+			{
+				mRenderer.addXTextLabel(i+1, ""+i+1);
+				series.add(i, data[i]);
+				Log.d("TAG4", "fftsample  " + i + ": " + data[i]);
+			}
+			intent = ChartFactory.getBarChartIntent(getBaseContext(), mSeries, mRenderer, BarChart.Type.DEFAULT);
+		}
+		startActivity(intent);
+		
 	}
 	
 	@Override
