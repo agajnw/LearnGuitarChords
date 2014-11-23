@@ -1,18 +1,82 @@
 package com.example.ffttest;
 
+import java.io.IOException;
+
+import com.example.ffttest.AudioCapture;
+
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
+import android.widget.Button;
 
 public class MainActivity extends ActionBarActivity {
 
+	private static boolean is_listening = false;
+	private AudioCapture ac = null;
+	private Thread thread = null;
+	
+	private double[] fftData;
+	private double[] dData;
+	
+	public void onButtonClicked(View view)
+	{
+		Button button = (Button)view;
+		if(!is_listening)
+		{
+			button.setText(getString(R.string.stop_button));
+			
+			ac = new AudioCapture();
+			thread = new Thread(ac);
+			thread.start();
+			Log.d("FFTTEST", "Audio capture thread started");
+			
+			fftData = null;
+			dData = null;
+		}
+		else
+		{
+			button.setText(getString(R.string.listen_button));
+			ac.stopListening();
+			
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			Log.d("FFTTEST", "Audio capture thread stopped");
+			
+			thread = null;
+			ac = null;
+			
+			playRecording();
+		}
+		is_listening = !is_listening;
+	}
+	
+	public void playRecording() {
+		String filepath = Environment.getExternalStorageDirectory().getAbsolutePath();
+		String fn = filepath + "/FFTPrototype/ftt_prototype_recording.wav";
+		
+		Log.d("FFTTEST", "file name " + fn);
+		
+		MediaPlayer player = new MediaPlayer();
+		try {
+			player.setDataSource(fn);
+			player.prepare();
+			player.start();
+		} catch(IOException e) {
+			Log.e("FFTTEST", "play prepare() failed");
+		}
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
