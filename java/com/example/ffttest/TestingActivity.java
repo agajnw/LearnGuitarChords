@@ -32,7 +32,7 @@ public class TestingActivity extends ActionBarActivity {
     private static boolean is_listening = false;
     private Thread thread = null;
 
-    private AudioCapture audioCapture = null;
+    private AudioCaptureRunnable audioCapture = null;
     private AudioAnalysis audioAnalysis = null;
     private FileManager fileManager = null;
 
@@ -65,7 +65,7 @@ public class TestingActivity extends ActionBarActivity {
         {
             button.setText(getString(R.string.stop_button));
 
-            audioCapture = new AudioCapture();
+            audioCapture = new AudioCaptureRunnable();
             thread = new Thread(audioCapture);
             thread.start();
             Log.d("FFTTEST", "Audio capture thread started");
@@ -187,7 +187,6 @@ public class TestingActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.testing);
-
 
         audioAnalysis = new AudioAnalysis(dataLength);
         fileManager = new FileManager(dataLength);

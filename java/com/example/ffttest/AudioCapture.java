@@ -11,22 +11,17 @@ import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
 
-public class AudioCapture implements Runnable{
+public class AudioCapture {
 	private int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
 	private int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT; //sample resolution 16bit
 	private int RECORDER_SAMPLERATE = 16000; //sampling frequency 44.10kHz
 	private byte RECORDER_BPP = (byte) 16;
-	private boolean running = true;
 
 	private AudioRecord audioRecorder;
 	
 
 	public AudioCapture()
 	{
-	}
-	
-	public void stopListening() {
-		running = false;
 	}
 	
 	private void writeAudioToFile(int totalReadBytes, byte totalByteBuffer[]) {
@@ -112,7 +107,7 @@ public class AudioCapture implements Runnable{
         }
        
 	}
-	public void arm() {
+	public void startListening() {
 	    // Get the minimum buffer size required for the successful creation of an AudioRecord object.
 	    int bufferSizeInBytes = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE, RECORDER_CHANNELS,
 	            RECORDER_AUDIO_ENCODING);
@@ -137,19 +132,19 @@ public class AudioCapture implements Runnable{
 	    Log.d("AUDIO_CAPTURE", "Total byte buffer size " + 60*16000*2);
 
 	    // While data come from microphone.
-	    while (running) {
+	    while (true) {
 	        float totalAbsValue = 0.0f;
 	        short sample = 0;
 
 	        numberOfReadBytes = audioRecorder.read(audioBuffer, 0, bufferSizeInBytes);
-	        Log.d("AUDIO_CAPTURE", "Number of read bytes " + numberOfReadBytes);
+	        //Log.d("AUDIO_CAPTURE", "Number of read bytes " + numberOfReadBytes);
 
 	        // Analyze Sound.
 	        for (int i = 0; i < bufferSizeInBytes; i += 2) {
 	            sample = (short) ((audioBuffer[i]) | audioBuffer[i + 1] << 8);
 	            totalAbsValue += Math.abs(sample) / (numberOfReadBytes / 2);
 	        }
-	        Log.d("AUDIO_CAPTURE", "Total abs value " + totalAbsValue);
+	       // Log.d("AUDIO_CAPTURE", "Total abs value " + totalAbsValue);
 
 	        // Analyze temp buffer.
 	        tempFloatBuffer[tempIndex % 3] = totalAbsValue;
@@ -163,13 +158,13 @@ public class AudioCapture implements Runnable{
 	        }
 
 	        if (temp > 250 && recording == false) {
-	            Log.i("AUDIO_CAPTURE", "Start recording");
+	            //Log.i("AUDIO_CAPTURE", "Start recording");
 	            recording = true;
 	        }
 
 	        if ((temp >= 0 && temp <= 250) && recording == true) {
 	            
-	        	Log.i("AUDIO_CAPTURE", "Save audio to file.");
+	        	//Log.i("AUDIO_CAPTURE", "Save audio to file.");
 
 	            writeAudioToFile(totalReadBytes, totalByteBuffer);
 
@@ -177,7 +172,7 @@ public class AudioCapture implements Runnable{
 	            break;
 	        }
 
-	        Log.i("AUDIO_CAPTURE", "Recording Sound.");
+	        //Log.i("AUDIO_CAPTURE", "Recording Sound.");
 	        for (int i = 0; i < numberOfReadBytes; i++)
 	            totalByteBuffer[totalReadBytes + i] = audioBuffer[i];
 	        totalReadBytes += numberOfReadBytes;
@@ -185,14 +180,10 @@ public class AudioCapture implements Runnable{
 	        tempIndex++;
 	    }
 	    
-	    Log.i("AUDIO_CAPTURE", "Channel count " + audioRecorder.getChannelCount());
-	    Log.i("AUDIO_CAPTURE", "Sample rate " + audioRecorder.getSampleRate());
-	    
+	    //Log.i("AUDIO_CAPTURE", "Channel count " + audioRecorder.getChannelCount());
+	    //Log.i("AUDIO_CAPTURE", "Sample rate " + audioRecorder.getSampleRate());
+
 	    audioRecorder.stop();
 	    audioRecorder.release();
-	}
-	
-	public void run() {
-		arm();
 	}
 }

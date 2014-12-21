@@ -56,9 +56,9 @@ public class AudioAnalysis {
 	    double [] result = new double[size];
 		for(int i=0;i<size;i++)
 		{
-		    Log.d("FFT", "before " + data[i]);
+		    //Log.d("FFT", "before " + data[i]);
 			result[i] = (double)(data[i]*0.5*(1.0 - Math.cos(2.0*Math.PI*i/(size-1))));
-			Log.d("FFT", "after " + data[i]);
+			//Log.d("FFT", "after " + data[i]);
 		}
 		  
 		return result;
@@ -72,14 +72,14 @@ public class AudioAnalysis {
 
 		for(int i=0;i<MAX_BUCKET;i++)
 		{
-			Log.d("VALUE", "Value of " + i + "is " + data[i]);
+			//Log.d("VALUE", "Value of " + i + "is " + data[i]);
 			if(data[i]>=maxValue)
 			{
 				maxValue = data[i];
 				maxI = i;
 			}
 		}
-		Log.d("PEAK", "Peak is at " + maxI + ", value " + maxValue);
+		//Log.d("PEAK", "Peak is at " + maxI + ", value " + maxValue);
 		return maxI;
 	 }
 
@@ -88,12 +88,12 @@ public class AudioAnalysis {
    {
        if(peakValue == stringBins[stringNumber][fretNumber])
            return true;
-       if(peakValue == 2*stringBins[stringNumber][fretNumber]) //if peakValue is the first harmonic
+       if(peakValue%stringBins[stringNumber][fretNumber] == 0) //if peakValue is the first harmonic
            return true;
        //for now accept value greater by 1
        if(peakValue-1 == stringBins[stringNumber][fretNumber])
            return true;
-       if((peakValue-1) == 2*stringBins[stringNumber][fretNumber])
+       if((peakValue-1)%stringBins[stringNumber][fretNumber] == 0)
            return true;
 
        return false;

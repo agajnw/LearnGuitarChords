@@ -25,35 +25,31 @@ public class FileManager {
         try {
             in = new FileInputStream(fn);
             try {
-            	Log.d("READ", "Remaining1 " + in.available());
+            	//Log.d("READ", "Remaining1 " + in.available());
             	in.skip(100);//file metadata
             	
-            	//if(in.available()>dataLength*2+4096)
-            	//	in.skip(4096);
-            	
-            	Log.d("READ", "Remaining2 " + in.available());
+            	//Log.d("READ", "Remaining2 " + in.available());
                 in.read(bData);
                 in.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                return null;
             }
 
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
+            return null;
         }
         
         for (int i = 0; i < dataLength*2; i += 2) {
             sData[i/2] = (short) ((bData[i]) | bData[i + 1] << 8);
-            Log.d("TAG1", "sample " + i/2 + ": " + sData[i/2]);
+            //Log.d("TAG1", "sample " + i/2 + ": " + sData[i/2]);
         }
-        
-        //for(int i=0;i<dataLength;i++)
-        //	sData[i] = (short)bData[i];
         
         for(int i=0;i<dataLength;i++)
         {
         	dData[i] = (double)sData[i]/32768.0;
-        	Log.d("TAG2", "sample " + i + ": " + dData[i]);
+        	//Log.d("TAG2", "sample " + i + ": " + dData[i]);
         }
         
         return dData;

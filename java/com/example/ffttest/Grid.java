@@ -12,13 +12,17 @@ import android.widget.Toast;
 
 
 public class Grid extends ActionBarActivity {
-    public final static String EXTRA_MESSAGE = "com.example.fftest.CHORD";
+    public final static String PARCELABLE_CHORD = "com.example.fftest.CHORD";
 
     public Grid(){
     }
 
     public void startChordActivity(Chord chord) {
+        Bundle b = new Bundle();
+        b.putParcelable(PARCELABLE_CHORD, chord);
+
         Intent intent = new Intent(this, ChordView.class);
+        intent.putExtras(b);
         startActivity(intent);
     }
 

@@ -1,9 +1,12 @@
 package com.example.ffttest;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by agnieszka on 21.12.14.
  */
-public class Chord {
+public class Chord implements Parcelable {
     private String name;
     private int frets[];
     //@TODO tips for playing - which finger where
@@ -25,8 +28,39 @@ public class Chord {
         return name;
     }
 
+    public int fretValGet(int stringNumber)
+    {
+        return frets[stringNumber];
+    }
+
     public boolean compareNote(int stringNumber, int fretNumber)
     {
         return (frets[stringNumber]==fretNumber);
+    }
+
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(name);
+        out.writeIntArray(frets);
+    }
+
+    public static final Parcelable.Creator<Chord> CREATOR
+            = new Parcelable.Creator<Chord>() {
+        public Chord createFromParcel(Parcel in) {
+            return new Chord(in);
+        }
+
+        public Chord[] newArray(int size) {
+            return new Chord[size];
+        }
+    };
+
+    private Chord(Parcel in) {
+        name = in.readString();
+        frets = in.createIntArray();
     }
 }
