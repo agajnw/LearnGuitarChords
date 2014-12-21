@@ -1,17 +1,14 @@
 package com.example.ffttest;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.chart.BarChart;
+import org.achartengine.chart.PointStyle;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
-
-import com.example.ffttest.AudioCapture;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -30,20 +27,29 @@ import android.widget.Button;
 
 public class MainActivity extends ActionBarActivity {
 
+	private static final boolean INITIAL_DATA = false;
+	private static final boolean FFT_DATA = true;
+	private static final String SAMPLE_AUDIO_FILE = "storage/emulated/0/Download/sound.ogg";
+	private static final String RECORDED_AUDIO_FILE = "/FFTPrototype/ftt_prototype_recording.wav";
+	
 	private static boolean is_listening = false;
-	private AudioCapture ac = null;
 	private Thread thread = null;
+	
+	private AudioCapture audioCapture = null;
+	private AudioAnalysis audioAnalysis = null;
+	private FileManager fileManager = null;
 	
 	private double[] fftData;
 	private double[] dData;
-	
-	private int dataLength = 2048;
+	private int dataLength = 1024;
+	private int maxBucket = 0;
+	private String fn;
 	
 	public void showInitialChart(View view)
 	{
 		if(dData != null)
 		{
-			createInitialDataChart(dData, false);
+			createDataChart(dData, INITIAL_DATA);
 		}
 	}
 	
@@ -51,7 +57,7 @@ public class MainActivity extends ActionBarActivity {
 	{
 		if(fftData != null)
 		{
-			createInitialDataChart(fftData, true);
+			createDataChart(fftData, FFT_DATA);
 		}
 	}
 	
@@ -62,8 +68,8 @@ public class MainActivity extends ActionBarActivity {
 		{
 			button.setText(getString(R.string.stop_button));
 			
-			ac = new AudioCapture();
-			thread = new Thread(ac);
+			audioCapture = new AudioCapture();
+			thread = new Thread(audioCapture);
 			thread.start();
 			Log.d("FFTTEST", "Audio capture thread started");
 			
@@ -73,7 +79,7 @@ public class MainActivity extends ActionBarActivity {
 		else
 		{
 			button.setText(getString(R.string.listen_button));
-			ac.stopListening();
+			audioCapture.stopListening();
 			
 			try {
 				thread.join();
@@ -83,24 +89,25 @@ public class MainActivity extends ActionBarActivity {
 			Log.d("FFTTEST", "Audio capture thread stopped");
 			
 			thread = null;
-			ac = null;
+			audioCapture = null;
 			
 			playRecording();
+			analyseAudio();
 		}
 		is_listening = !is_listening;
 	}
 	
 	public void playRecording() {
 		String filepath = Environment.getExternalStorageDirectory().getAbsolutePath();
-		String fn = filepath + "/FFTPrototype/ftt_prototype_recording.wav";
+		
+		fn = filepath + RECORDED_AUDIO_FILE;
 		
 		Log.d("FFTTEST", "file name " + fn);
-		
-		writeAudioData(fn);
 		
 		MediaPlayer player = new MediaPlayer();
 		try {
 			player.setDataSource(fn);
+			//player.setDataSource("storage/emulated/0/Download/sound.ogg");
 			player.prepare();
 			player.start();
 		} catch(IOException e) {
@@ -108,70 +115,26 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 	
-	public void writeAudioData(String fn) {
-		FileInputStream in;
-		byte[] bData = new byte[dataLength*2];
-		short[] sData = new short[dataLength];
+	private void analyseAudio()
+	{
+		dData = fileManager.getAudioData(fn);
+		//dData = fileManager.readSampleFileFromDevice();
+		//dData = fileManager.getAudioData(SAMPLE_AUDIO_FILE);
 		
-        try {
-            in = new FileInputStream(fn);
-            try {
-            	Log.d("READ", "Remaining1 " + in.available());
-            	in.skip(44+5*4096);
-            	Log.d("READ", "Remaining2 " + in.available());
-                in.read(bData);
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
-        }
-        
-        for (int i = 0; i < dataLength*2; i += 2) {
-            sData[i/2] = (short) ((bData[i]) | bData[i + 1] << 8);
-            Log.d("TAG1", "sample " + i/2 + ": " + sData[i/2]);
-        }
-        
-        dData = new double[dataLength];
-        for(int i=0;i<dataLength;i++)
-        {
-        	dData[i] = (double)sData[i];
-        	Log.d("TAG2", "sample " + i + ": " + dData[i]);
-        }
-        
-        AudioAnalysis audioAnalysis = new AudioAnalysis(dataLength);
-        fftData = new double[dataLength/2];
-        audioAnalysis.analyseAudio(dData, fftData);
-        
-        findPeak(fftData);
-        
-        for(int i=0;i<dataLength/2;i++)
-        {
-        	//Log.d("TAG", "sample " + i + ": " + dData[i]);
-        	Log.d("TAG", "FFT data " + i + ": " +fftData[i]);
-        }
+		fftData = audioAnalysis.analyseAudio(dData);
+		maxBucket = audioAnalysis.findPeak(fftData);
+		Log.d("MAX", "Max bucket at " + maxBucket + "- " + maxBucket*44100/1024 + "Hz");
 	}
 	
-	private void findPeak(double [] data)
+	private void createDataChart(double[] data, boolean isFFT)
 	{
-		double maxValue = 0;
-		int maxI = 0;
-		for(int i=0;i<data.length;i++)
-			if(data[i]>=maxValue)
-			{
-				maxValue = data[i];
-				maxI = i;
-			}
-		Log.d("PEAK", "Peak is at " + maxI + ", value " + maxValue);
-				
-	}
-	
-	private void createInitialDataChart(double[] data, boolean is_fft)
-	{
-		Log.d("TAG", "Create initial data chart");
-		XYSeries series = new XYSeries(getString(R.string.initial_data_chart));
+		Log.d("TAG", "Create data chart");
+		XYSeries series;
+		
+		if(isFFT)
+			series = new XYSeries(getString(R.string.initial_data_chart));
+		else
+			series = new XYSeries(getString(R.string.fft_data_chart));
 		
 		XYMultipleSeriesDataset mSeries = new XYMultipleSeriesDataset();
 		mSeries.addSeries(series);
@@ -179,6 +142,8 @@ public class MainActivity extends ActionBarActivity {
 		XYSeriesRenderer renderer = new XYSeriesRenderer();
 		renderer.setLineWidth(2);
 		renderer.setColor(Color.RED);
+		renderer.setPointStyle(PointStyle.CIRCLE);
+		renderer.setFillPoints(true);
 		
 		XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
 		mRenderer.setXLabels(0);
@@ -191,9 +156,9 @@ public class MainActivity extends ActionBarActivity {
 		
 		Intent intent;
 
-		if(!is_fft)
+		if(!isFFT)
 		{
-			for(int i=0;i<data.length;i++)
+			for(int i=0;i<1024;i++)
 			{
 				mRenderer.addXTextLabel(i+1, ""+i+1);
 				series.add(i, data[i]);
@@ -203,7 +168,7 @@ public class MainActivity extends ActionBarActivity {
 		}
 		else
 		{
-			for(int i=0;i<data.length/2;i++)
+			for(int i=0;i<audioAnalysis.MAX_BUCKET;i++)
 			{
 				mRenderer.addXTextLabel(i+1, ""+i+1);
 				series.add(i, data[i]);
@@ -224,6 +189,9 @@ public class MainActivity extends ActionBarActivity {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		audioAnalysis = new AudioAnalysis(dataLength);
+		fileManager = new FileManager(dataLength);
 	}
 
 	@Override

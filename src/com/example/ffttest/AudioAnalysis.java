@@ -8,8 +8,10 @@ import android.util.Log;
 	
 public class AudioAnalysis {
 
-	  private int dataLength;
-	  private FFT fft;
+	public final int MAX_BUCKET = 28; //max frequency produced by guitar is 1174.624Hz
+	
+	private int dataLength;
+	private FFT fft;
 
 	  // Lookup tables. Only need to recompute when size of FFT changes.
 	  double[] cos;
@@ -21,10 +23,14 @@ public class AudioAnalysis {
 		  fft = new FFT(dataLength);
 	  }
 
-	  public void analyseAudio(double[] dataToAnalyse, double[] resultData)
+	  public double[] analyseAudio(double[] dataToAnalyse)
 	  {
+		  double [] resultData = new double[dataLength];
 		  double [] afterHanning = hanningWindow(dataToAnalyse, dataLength);
+		  
 		  fft.fft(afterHanning,  resultData);
+		  
+		  return resultData;
 	  }
 	  
 	  double [] hanningWindow(double[] data, int size)
@@ -39,4 +45,24 @@ public class AudioAnalysis {
 		  
 		  return result;
 	  }
+	  
+	  public int findPeak(double [] data)
+		{
+			//max: C6 - 1046.50hz
+			double maxValue = 0;
+			int maxI = 0;
+
+			for(int i=0;i<MAX_BUCKET;i++)
+			{
+				Log.d("VALUE", "Value of " + i + "is " + data[i]);
+				if(data[i]>=maxValue)
+				{
+					maxValue = data[i];
+					maxI = i;
+				}
+			}
+			Log.d("PEAK", "Peak is at " + maxI + ", value " + maxValue);
+			return maxI;
+					
+		}
 	}

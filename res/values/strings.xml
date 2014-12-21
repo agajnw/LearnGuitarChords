@@ -7,6 +7,7 @@
     <string name="listen_button">Listen</string>
     <string name="stop_button">Stop</string>
     <string name="initial_data_chart">Initial audio data chart</string>
+    <string name="fft_data_chart">FFT data chart</string>
     <string name="initial_chart_button">Initial data chart</string>
     <string name="fft_chart_button">FFT data chart</string>
 

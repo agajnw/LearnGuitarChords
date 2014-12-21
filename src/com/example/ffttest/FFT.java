@@ -2,7 +2,7 @@ package com.example.ffttest;
 
 import android.util.Log;
 
-//to change , code frome here - https://www.ee.columbia.edu/~ronw/code/MEAPsoft/doc/html/FFT_8java-source.html
+//to change , code from here - https://www.ee.columbia.edu/~ronw/code/MEAPsoft/doc/html/FFT_8java-source.html
 
 public class FFT {
 
