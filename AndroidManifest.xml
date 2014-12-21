@@ -4,12 +4,14 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="19" />
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:allowBackup="true"
@@ -17,7 +19,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.example.ffttest.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,6 +28,30 @@
             </intent-filter>
         </activity>
         <activity android:name="org.achartengine.GraphicalActivity" />
+        <activity
+            android:name=".TestingActivity"
+            android:label="@string/title_activity_testing"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.ffttest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".Grid"
+            android:label="@string/title_activity_grid"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.ffttest.MainActivity" />
+        </activity>
+        <activity
+            android:name=".ChordView"
+            android:label="@string/title_activity_chord_view"
+            android:parentActivityName=".Grid" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.ffttest.Grid" />
+        </activity>
     </application>
 
 </manifest>

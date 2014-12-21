@@ -36,7 +36,7 @@ public class AudioCapture implements Runnable{
         if (!file.exists())
             file.mkdirs();
 
-        String fn = filepath + MainActivity.RECORDED_AUDIO_FILE;
+        String fn = filepath + TestingActivity.RECORDED_AUDIO_FILE;
         Log.i("TAG", "file name " + fn);
         
         long totalAudioLen = 0;

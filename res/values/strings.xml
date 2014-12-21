@@ -10,5 +10,8 @@
     <string name="fft_data_chart">FFT data chart</string>
     <string name="initial_chart_button">Initial data chart</string>
     <string name="fft_chart_button">FFT data chart</string>
+    <string name="title_activity_testing">TestingActivity</string>
+    <string name="title_activity_grid">Grid</string>
+    <string name="title_activity_chord_view">ChordView</string>
 
 </resources>
