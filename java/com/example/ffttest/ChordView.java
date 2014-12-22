@@ -1,6 +1,7 @@
 package com.example.ffttest;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
@@ -8,6 +9,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
@@ -18,6 +22,8 @@ public class ChordView extends ActionBarActivity {
     private AnalysisManager aManager;
     private NoteAnalyzer nAnalyzer;
     private Thread nThread;
+    private Chord chord;
+    private int[][] fretsIds;
 
     public Handler messageHandler = new Handler() {
         @Override
@@ -25,16 +31,17 @@ public class ChordView extends ActionBarActivity {
             Log.d("MESSAGE", String.format("Handlemessage: msg=%s", msg));
             if(msg.what %10 == 1)
             {
-                stringColorSet(msg.what/10, INCORRECT);
-                resultTextSet("Incorrect! Try again\nPlay string " + msg.what/10 + 1);
+                fingerDotColorSet(msg.what/10, INCORRECT);
+                resultTextSet("Incorrect!\nTry again");
             }
             else if(msg.what%10 == 2)
             {
-                stringColorSet(msg.what/10, CORRECT);
+                fingerDotColorSet(msg.what/10, CORRECT);
                 resultTextSet("Correct!");
+                progressUpdate(msg.what/10+1);
             }
             else if(msg.what%10 == 0)
-                resultTextSet("Listening...\nPlay string " + msg.what/10 + 1);
+                resultTextSet("Listening...\nPlay string " + (msg.what/10 + 1));
         }
 
     };
@@ -44,23 +51,17 @@ public class ChordView extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chord_view);
 
-        Chord chord = (Chord)getIntent().getParcelableExtra(Grid.PARCELABLE_CHORD);
+        chord = (Chord)getIntent().getParcelableExtra(Grid.PARCELABLE_CHORD);
 
         final TextView nameTextView = (TextView)findViewById(R.id.name);
         nameTextView.setText(chord.nameGet());
 
-        TextView fretTextView = (TextView)findViewById(R.id.s1);
-        fretTextView.setText(""+chord.fretValGet(0));
-        fretTextView = (TextView)findViewById(R.id.s2);
-        fretTextView.setText(""+chord.fretValGet(1));
-        fretTextView = (TextView)findViewById(R.id.s3);
-        fretTextView.setText(""+chord.fretValGet(2));
-        fretTextView = (TextView)findViewById(R.id.s4);
-        fretTextView.setText(""+chord.fretValGet(3));
-        fretTextView = (TextView)findViewById(R.id.s5);
-        fretTextView.setText(""+chord.fretValGet(4));
-        fretTextView = (TextView)findViewById(R.id.s6);
-        fretTextView.setText(""+chord.fretValGet(5));
+        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar.setMax(6);
+        progressUpdate(0);
+
+        fingerDotsInit();
+
 
         aManager = new AnalysisManager(chord);
         startChordAnalysis();
@@ -69,13 +70,6 @@ public class ChordView extends ActionBarActivity {
     public void onStop() {
         if(nAnalyzer != null)
             nAnalyzer.stopThread();
-        if(nThread != null) {
-            try {
-                nThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
 
         super.onStop();
     }
@@ -98,32 +92,87 @@ public class ChordView extends ActionBarActivity {
 
     }
 
-    private void stringColorSet(int i, boolean isCorrect) {
-        TextView fretText;
-        //@TODO CHANGE IT!!!
-        if(i==0)
-            fretText = (TextView)findViewById(R.id.s1);
-        else if(i==1)
-            fretText = (TextView)findViewById(R.id.s2);
-        else if(i==2)
-            fretText = (TextView)findViewById(R.id.s3);
-        else if(i==3)
-            fretText = (TextView)findViewById(R.id.s4);
-        else if(i==4)
-            fretText = (TextView)findViewById(R.id.s5);
-        else
-            fretText = (TextView)findViewById(R.id.s6);
+    private void fingerDotsInit()
+    {
+        fretsIds = new int[6][5];
+        fretsIds[5][0] = R.id.dot11;
+        fretsIds[5][1] = R.id.dot12;
+        fretsIds[5][2] = R.id.dot13;
+        fretsIds[5][3] = R.id.dot14;
+        fretsIds[5][4] = R.id.dot15;
 
-        if(isCorrect)
-            fretText.setTextColor(Color.GREEN);
-        else
-            fretText.setTextColor(Color.RED);
+        fretsIds[4][0] = R.id.dot21;
+        fretsIds[4][1] = R.id.dot22;
+        fretsIds[4][2] = R.id.dot23;
+        fretsIds[4][3] = R.id.dot24;
+        fretsIds[4][4] = R.id.dot25;
+
+        fretsIds[3][0] = R.id.dot31;
+        fretsIds[3][1] = R.id.dot32;
+        fretsIds[3][2] = R.id.dot33;
+        fretsIds[3][3] = R.id.dot34;
+        fretsIds[3][4] = R.id.dot35;
+
+        fretsIds[2][0] = R.id.dot41;
+        fretsIds[2][1] = R.id.dot42;
+        fretsIds[2][2] = R.id.dot43;
+        fretsIds[2][3] = R.id.dot44;
+        fretsIds[2][4] = R.id.dot45;
+
+        fretsIds[1][0] = R.id.dot51;
+        fretsIds[1][1] = R.id.dot52;
+        fretsIds[1][2] = R.id.dot53;
+        fretsIds[1][3] = R.id.dot54;
+        fretsIds[1][4] = R.id.dot55;
+
+        fretsIds[0][0] = R.id.dot61;
+        fretsIds[0][1] = R.id.dot62;
+        fretsIds[0][2] = R.id.dot63;
+        fretsIds[0][3] = R.id.dot64;
+        fretsIds[0][4] = R.id.dot65;
+
+        if(chord == null)
+        {
+            Log.d("ERR", "Chord is null");
+            return;
+        }
+
+        for(int i=0;i<6;i++)
+        {
+            Log.d("DATA", "chord sample val" + chord.fretValGet(i));
+            if(chord.fretValGet(i)>0) {
+                ImageView dot = (ImageView) findViewById(fretsIds[i][chord.fretValGet(i)-1]);
+                dot.setColorFilter(0xf0001933, PorterDuff.Mode.MULTIPLY);
+                dot.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
-    public void resultTextSet(String text)
+    private void fingerDotColorSet(int i, boolean isCorrect) {
+        if(chord.fretValGet(i)<1)
+            return;
+
+        ImageView dot = (ImageView) findViewById(fretsIds[i][chord.fretValGet(i)-1]);
+
+        if(isCorrect)
+            dot.setColorFilter(0xf0195c0b, PorterDuff.Mode.MULTIPLY);
+        else
+            dot.setColorFilter(0xf08b0e12, PorterDuff.Mode.MULTIPLY);
+    }
+
+    private void resultTextSet(String text)
     {
         TextView resultText = (TextView)findViewById(R.id.results);
         resultText.setText(text);
+    }
+
+    private void progressUpdate(int value)
+    {
+        TextView progressText = (TextView)findViewById(R.id.progress);
+        progressText.setText(""+value+"/6");
+
+        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar.setProgress(value);
     }
 
 
@@ -184,6 +233,9 @@ public class ChordView extends ActionBarActivity {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        msg = Message.obtain();
+                        msg.what = 10*i;
+                        ChordView.this.messageHandler.sendMessage(msg);
                     }
                 }
                 while(!result);

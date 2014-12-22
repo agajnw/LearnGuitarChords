@@ -69,12 +69,10 @@ public class FileManager {
 		     
 		     for(int i=0;i<40;i++)
 		    	 dData[i] = 0.0;
-		     //for(int i=0;i<dataLength;i++)
-		    //	 dData[i] = (double) bytes[i];
 		     for (int i = 80; i < dataLength*2; i += 2) {
 		         dData[i/2] = (double) ((bytes[i]) | bytes[i + 1] << 8);
 		     }
-		     
+
 		     return dData;
 		 } catch (FileNotFoundException e) {
 		     // TODO Auto-generated catch block

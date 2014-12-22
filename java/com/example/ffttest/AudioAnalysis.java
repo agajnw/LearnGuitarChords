@@ -86,6 +86,7 @@ public class AudioAnalysis {
     //ew. dodatkowo sprawdzanie odleglosci miedzy szczytami
    public boolean checkIfMatchString(int peakValue, int stringNumber, int fretNumber)
    {
+       Log.d("ANALYZE", "Check string " + stringNumber + " fret " + fretNumber);
        if(peakValue == stringBins[stringNumber][fretNumber])
            return true;
        if(peakValue%stringBins[stringNumber][fretNumber] == 0) //if peakValue is the first harmonic
